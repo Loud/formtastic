@@ -1512,7 +1512,7 @@ describe 'Formtastic' do
               output_buffer.should have_tag('form li fieldset legend', /Author/)
             end
 
-            it 'shold generate an li tag for each item in the collection' do
+            it 'should generate an li tag for each item in the collection' do
               output_buffer.should have_tag('form li fieldset ol li', :count => ::Author.find(:all).size)
             end
 
@@ -1932,7 +1932,7 @@ describe 'Formtastic' do
               describe 'and the :collection is an array of strings' do
                 before do
                   @new_post.stub!(:category_name).and_return('')
-                  @categories = [ 'General', 'Design', 'Development' ]
+                  @categories = [ 'General', 'Design', 'Development', 'Quasi-Serious Inventions' ]
                 end
 
                 it "should use the string as the label text and value for each #{countable}" do
@@ -1954,10 +1954,10 @@ describe 'Formtastic' do
                         concat(bob_builder.input(:category_name, :as => type, :collection => @categories))
                       end
                     end
-
-                    @categories.each do |item|
-                      output_buffer.should have_tag("form li fieldset ol li label[@for='post_author_category_name_#{item.downcase}']")
-                    end
+                    output_buffer.should have_tag("form li fieldset ol li label[@for='post_author_category_name_general']")
+                    output_buffer.should have_tag("form li fieldset ol li label[@for='post_author_category_name_design']")
+                    output_buffer.should have_tag("form li fieldset ol li label[@for='post_author_category_name_development']")
+                    output_buffer.should have_tag("form li fieldset ol li label[@for='post_author_category_name_quasiserious_inventions']")
                   end
                 end
               end
@@ -1983,7 +1983,7 @@ describe 'Formtastic' do
               describe 'and the :collection is an array of arrays' do
                 before do
                   @new_post.stub!(:category_name).and_return('')
-                  @categories = { 'General' => 'gen', 'Design' => 'des','Development' => 'dev' }.to_a
+                  @categories = { 'General' => 'gen', 'Design' => 'des', 'Development' => 'dev' }.to_a
                 end
 
                 it "should use the first value as the label text and the last value as the value attribute for #{countable}" do
@@ -1995,10 +1995,30 @@ describe 'Formtastic' do
                     label = type == :select ? :option : :label
                     output_buffer.should have_tag("form li.#{type} #{label}", /#{text}/i)
                     output_buffer.should have_tag("form li.#{type} #{countable}[@value='#{value.to_s}']")
+                    output_buffer.should have_tag("form li.#{type} #{countable}#post_category_name_#{value.to_s}") if type == :radio
                   end
                 end
               end
-
+              
+              if type == :radio
+                describe 'and the :collection is an array of arrays with boolean values' do
+                  before do
+                    @new_post.stub!(:category_name).and_return('')
+                    @choices = { 'Yeah' => true, 'Nah' => false }.to_a
+                  end
+              
+                  it "should use the first value as the label text and the last value as the value attribute for #{countable}" do
+                    semantic_form_for(@new_post) do |builder|
+                      concat(builder.input(:category_name, :as => type, :collection => @choices))
+                    end
+                    
+                    output_buffer.should have_tag("form li.#{type} #{countable}#post_category_name_true")
+                    output_buffer.should have_tag("form li.#{type} #{countable}#post_category_name_false")
+                  end
+                end
+              end
+              
+              
               describe 'and the :collection is an array of symbols' do
                 before do
                   @new_post.stub!(:category_name).and_return('')
@@ -3078,7 +3098,7 @@ describe 'Formtastic' do
 
         describe 'when the locale sets the label text' do
           before do
-            I18n.backend.store_translations 'en', :formtastic => {:save => 'Save Changes To' }
+            I18n.backend.store_translations 'en', :formtastic => {:save => 'Save Changes To {{model}}' }
             @new_post.stub!(:new_record?).and_return(false)
             semantic_form_for(@new_post) do |builder|
               concat(builder.commit_button)
@@ -3091,6 +3111,27 @@ describe 'Formtastic' do
 
           it 'should allow translation of the labels' do
             output_buffer.should have_tag('li.commit input[@value="Save Changes To Post"]')
+          end
+        end
+
+        describe 'when the label text is set for a locale with different word order from the default' do
+          before do
+            I18n.locale = 'ja'
+            I18n.backend.store_translations 'ja', :formtastic => {:save => '{{model}}の変更を保存する'}
+            @new_post.stub!(:new_record?).and_return(false)
+            ::Post.stub!(:human_name).and_return('投稿')
+            semantic_form_for(@new_post) do |builder|
+              concat(builder.commit_button)
+            end
+          end
+
+          after do
+            I18n.backend.store_translations 'ja', :formtastic => {:save => nil}
+            I18n.locale = 'en'
+          end
+
+          it 'should allow the translated label to have a different word order' do
+            output_buffer.should have_tag('li.commit input[@value="投稿の変更を保存する"]')
           end
         end
       end
@@ -3107,7 +3148,7 @@ describe 'Formtastic' do
 
         describe 'when the locale sets the label text' do
           before do
-            I18n.backend.store_translations 'en', :formtastic => {:create => 'Make' }
+            I18n.backend.store_translations 'en', :formtastic => {:create => 'Make {{model}}' }
             semantic_form_for(@new_post) do |builder|
               concat(builder.commit_button)
             end
@@ -3136,7 +3177,7 @@ describe 'Formtastic' do
 
         describe 'when the locale sets the label text' do
           before do
-            I18n.backend.store_translations 'en', :formtastic => { :submit => 'Send' }
+            I18n.backend.store_translations 'en', :formtastic => { :submit => 'Send {{model}}' }
             semantic_form_for(:project, :url => 'http://test.host') do |builder|
               concat(builder.commit_button)
             end

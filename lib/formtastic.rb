@@ -425,7 +425,7 @@ module Formtastic #:nodoc:
     end
 
     # Create a default button text. If the form is working with a object, it
-    # defaults to "Create model" or "Save model" depending if we are working
+    # defaults to "Create {{model}}" or "Save {{model}}" depending if we are working
     # with a new_record or not.
     #
     # When not working with models, it defaults to "Submit object".
@@ -437,9 +437,7 @@ module Formtastic #:nodoc:
       else
         object_name = @object_name.to_s.send(@@label_str_method)
       end
-
-      button_text = I18n.t(prefix.downcase, :default => prefix, :scope => [:formtastic])
-      "#{button_text} #{object_name}"
+      I18n.t(prefix.downcase, :model => object_name, :default => "#{prefix} {{model}}", :scope => [:formtastic])
     end
 
     # Determins if the attribute (eg :title) should be considered required or not.
@@ -673,7 +671,7 @@ module Formtastic #:nodoc:
 
         li_content = template.content_tag(:label,
           "#{self.radio_button(input_name, value, html_options)} #{label}",
-          :for => generate_html_id(input_name, value.to_s.downcase)
+          :for => generate_html_id(input_name, value.to_s.gsub(/\s/, '_').gsub(/\W/, '').downcase)
         )
 
         li_options = value_as_class ? { :class => value.to_s.downcase } : {}
@@ -749,7 +747,8 @@ module Formtastic #:nodoc:
     #
     def date_or_datetime_input(method, options)
       position = { :year => 1, :month => 2, :day => 3, :hour => 4, :minute => 5, :second => 6 }
-      inputs   = options.delete(:order) || I18n.translate(:'date.order') || [:year, :month, :day]
+      i18n_date_order = I18n.translate(:'date.order').is_a?(Array) ? I18n.translate(:'date.order') : nil
+      inputs   = options.delete(:order) || i18n_date_order || [:year, :month, :day]
 
       time_inputs = [:hour, :minute]
       time_inputs << [:second] if options[:include_seconds]
@@ -853,7 +852,7 @@ module Formtastic #:nodoc:
         label = c.is_a?(Array) ? c.first : c
         value = c.is_a?(Array) ? c.last : c
 
-        html_options.merge!(:id => generate_html_id(input_name, value.to_s.downcase))
+        html_options.merge!(:id => generate_html_id(input_name, value.to_s.gsub(/\s/, '_').gsub(/\W/, '').downcase))
  
         li_content = template.content_tag(:label,
           "#{self.check_box(input_name, html_options, value, unchecked_value)} #{label}",
