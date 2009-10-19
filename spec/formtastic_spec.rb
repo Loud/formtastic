@@ -569,13 +569,60 @@ describe 'Formtastic' do
                   end
 
                   it 'should be not be required if the optional :if condition is not satisifed' do
-                    @new_post.class.should_receive(:reflect_on_validations_for).with(:body).and_return([
-                      mock('MacroReflection', :macro => :validates_presence_of, :name => :body, :options => {:if => false})
-                    ])
-
-                    semantic_form_for(@new_post) do |builder|
-                      concat(builder.input(:body))
-                    end
+                    should_be_required(:required => false, :options => { :if => false })
+                  end
+                  
+                  it 'should not be required if the optional :if proc evaluates to false' do
+                    should_be_required(:required => false, :options => { :if => proc { |record| false } })
+                  end
+                  
+                  it 'should be required if the optional :if proc evaluates to true' do
+                    should_be_required(:required => true, :options => { :if => proc { |record| true } })
+                  end
+                  
+                  it 'should not be required if the optional :unless proc evaluates to true' do
+                    should_be_required(:required => false, :options => { :unless => proc { |record| true } })
+                  end
+                  
+                  it 'should be required if the optional :unless proc evaluates to false' do
+                    should_be_required(:required => true, :options => { :unless => proc { |record| false } })
+                  end
+                  
+                  it 'should be required if the optional :if with a method string evaluates to true' do
+                    @new_post.should_receive(:required_condition).and_return(true)
+                    should_be_required(:required => true, :options => { :if => :required_condition })
+                  end
+                  
+                  it 'should be required if the optional :if with a method string evaluates to false' do
+                    @new_post.should_receive(:required_condition).and_return(false)
+                    should_be_required(:required => false, :options => { :if => :required_condition })
+                  end
+                  
+                  it 'should not be required if the optional :unless with a method string evaluates to false' do
+                     @new_post.should_receive(:required_condition).and_return(false)
+                    should_be_required(:required => true, :options => { :unless => :required_condition })
+                  end
+                  
+                   it 'should be required if the optional :unless with a method string evaluates to true' do
+                     @new_post.should_receive(:required_condition).and_return(true)
+                     should_be_required(:required => false, :options => { :unless => :required_condition })
+                   end
+                end
+                
+                # TODO make a matcher for this?
+                def should_be_required(options)
+                  @new_post.class.should_receive(:reflect_on_validations_for).with(:body).and_return([
+                    mock('MacroReflection', :macro => :validates_presence_of, :name => :body, :options => options[:options])
+                  ])
+                  
+                  semantic_form_for(@new_post) do |builder|
+                    concat(builder.input(:body))
+                  end
+                  
+                  if options[:required]
+                    output_buffer.should_not have_tag('form li.optional')
+                    output_buffer.should have_tag('form li.required')
+                  else
                     output_buffer.should have_tag('form li.optional')
                     output_buffer.should_not have_tag('form li.required')
                   end
@@ -939,6 +986,7 @@ describe 'Formtastic' do
               output_buffer.should have_tag("form li.string")
               output_buffer.should have_tag("form li.required")
               output_buffer.should have_tag("form li.another_class")
+              output_buffer.should have_tag("form li.title")
             end
 
             it 'should allow classes to be an array' do
@@ -948,6 +996,7 @@ describe 'Formtastic' do
               output_buffer.should have_tag("form li.string")
               output_buffer.should have_tag("form li.my_class")
               output_buffer.should have_tag("form li.another_class")
+              output_buffer.should have_tag("form li.title")
             end
           end
 
@@ -958,6 +1007,7 @@ describe 'Formtastic' do
               end
               output_buffer.should have_tag("form li#post_title_input")
               output_buffer.should have_tag("form li.string")
+              output_buffer.should have_tag("form li.title")
             end
           end
 
@@ -2067,17 +2117,35 @@ describe 'Formtastic' do
               end
               
               describe 'when the :label_method option is provided' do
-                before do
-                  semantic_form_for(@new_post) do |builder|
-                    concat(builder.input(:author, :as => type, :label_method => :login))
+                
+                describe 'as a symbol' do
+                  before do
+                    semantic_form_for(@new_post) do |builder|
+                      concat(builder.input(:author, :as => type, :label_method => :login))
+                    end
                   end
-                end
 
-                it 'should have options with text content from the specified method' do
-                  ::Author.find(:all).each do |author|
-                    output_buffer.should have_tag("form li.#{type}", /#{author.login}/)
+                  it 'should have options with text content from the specified method' do
+                    ::Author.find(:all).each do |author|
+                      output_buffer.should have_tag("form li.#{type}", /#{author.login}/)
+                    end
                   end
                 end
+                
+                describe 'as a proc' do
+                  before do
+                    semantic_form_for(@new_post) do |builder|
+                      concat(builder.input(:author, :as => type, :label_method => Proc.new {|a| a.login.reverse }))
+                    end
+                  end
+                  
+                  it 'should have options with the proc applied to each' do
+                    ::Author.find(:all).each do |author|
+                      output_buffer.should have_tag("form li.#{type}", /#{author.login.reverse}/)
+                    end
+                  end
+                end
+                
               end
 
               describe 'when the :label_method option is not provided' do
@@ -2104,15 +2172,32 @@ describe 'Formtastic' do
               end
 
               describe 'when the :value_method option is provided' do
-                before do
-                  semantic_form_for(@new_post) do |builder|
-                    concat(builder.input(:author, :as => type, :value_method => :login))
+                
+                describe 'as a symbol' do
+                  before do
+                    semantic_form_for(@new_post) do |builder|
+                      concat(builder.input(:author, :as => type, :value_method => :login))
+                    end
+                  end
+                  
+                  it 'should have options with values from specified method' do
+                    ::Author.find(:all).each do |author|
+                      output_buffer.should have_tag("form li.#{type} #{countable}[@value='#{author.login}']")
+                    end
                   end
                 end
+                
+                describe 'as a proc' do
+                  before do
+                    semantic_form_for(@new_post) do |builder|
+                      concat(builder.input(:author, :as => type, :value_method => Proc.new {|a| a.login.reverse }))
+                    end
+                  end
 
-                it 'should have options with values from specified method' do
-                  ::Author.find(:all).each do |author|
-                    output_buffer.should have_tag("form li.#{type} #{countable}[@value='#{author.login}']")
+                  it 'should have options with the proc applied to each value' do
+                    ::Author.find(:all).each do |author|
+                      output_buffer.should have_tag("form li.#{type} #{countable}[@value='#{author.login.reverse}']")
+                    end
                   end
                 end
               end
