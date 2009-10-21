@@ -79,31 +79,30 @@ RDoc documentation _should_ be automatically generated after each commit and mad
 
 h2. Installation
 
-You can and should get it as a gem:
+The gem is hosted on gemcutter, so if you haven't already, add it as a gem source:
 
 <pre>
-  gem install justinfrench-formtastic
+  sudo gem sources -a http://gemcutter.org/
 </pre>
 
-And then add it as a dependency in your environment.rb file:
+Then install the Formtastic gem:q
 
 <pre>
-  config.gem "justinfrench-formtastic", 
-    :lib     => 'formtastic', 
-    :source  => 'http://gems.github.com'
+  sudo gem install formtastic
 </pre>
 
-If you want, run the generator to copy the following files into your app:
+Optionally, run @./script/generate formtastic@ to copy the following files into your app:
 
 * config/initializers/formtastic.rb (a commented out Formtastic config initializer)
 * public/stylesheets/formtastic.css
 * public/stylesheets/formtastic_changes.css
 
-<pre>
-  ./script/generate formtastic
-</pre>
+A proof-of-concept stylesheet is provided which you can include in your layout.  Customization is best achieved by overriding these styles in an additional stylesheet so that the Formtastic styles can be updated without clobbering your changes.  If you want to use these stylesheets, add both to your layout:
 
-See also "What about Stylesheets?"
+<pre>
+  <%= stylesheet_link_tag "formtastic" %>
+  <%= stylesheet_link_tag "formtastic_changes" %>
+</pre>
 
 
 h2. Usage
@@ -260,6 +259,7 @@ h2. Internationalization (I18n)
 
 Formtastic got some neat I18n-features. ActiveRecord object names and attributes are, by default, taken from calling @object.human_name and @object.human_attribute_name(attr) respectively. There are a few words specific to Formtastic that can be translated. See lib/locale/en.yml for more information.
 
+
 h3. Label/Hint-localization
 
 Formtastic supports localized *labels* and *hints* using the I18n API for more advanced usage. Your forms can now be DRYer and more flexible than ever, and still fully localized. This is how:
@@ -397,75 +397,20 @@ For more flexible forms; Formtastic find translations using a bottom-up approach
 
 *Note:* For @title@: ATTRIBUTE is a KEY chosen by you, e.g. in step 4 example above: @:post_details@.
 
+
 h2. ValidationReflection plugin
 
 If you have the "ValidationReflection":http://github.com/redinger/validation_reflection plugin installed, you won't have to specify the :required option (it checks the validations on the model instead).
 
+
 h2. Configuration
 
-If you wish, put something like this in config/initializers/formtastic_config.rb:
+Run @./script/generate formtastic@ to copy a commented out config file into @config/initializers/formtastic.rb@.  You can "view the configuration file on GitHub":http://github.com/justinfrench/formtastic/blob/master/generators/formtastic/templates/formtastic.rb
 
-<pre>
-  # Set the default text field size when input is a string. Default is 50
-  Formtastic::SemanticFormBuilder.default_text_field_size = 30
-
-  # Should all fields be considered "required" by default
-  # Defaults to true, see ValidationReflection notes below
-  Formtastic::SemanticFormBuilder.all_fields_required_by_default = false
-  
-  # Set the string that will be appended to the labels/fieldsets which are required
-  # It accepts string or procs and the default is a localized version of
-  # '<abbr title="required">*</abbr>'. In other words, if you configure formtastic.required
-  # in your locale, it will replace the abbr title properly. But if you don't want to use
-  # abbr tag, you can simply give a string as below
-  Formtastic::SemanticFormBuilder.required_string = "(required)"
-  
-  # Set the string that will be appended to the labels/fieldsets which are optional
-  # Defaults to an empty string ("") and also accepts procs (see required_string above)
-  Formtastic::SemanticFormBuilder.optional_string = "(optional)"
-
-  # Set the way inline errors will be displayed.
-  # Defaults to :sentence, valid options are :sentence, :list and :none
-  Formtastic::SemanticFormBuilder.inline_errors = :list
-
-  # Set the method to call on label text to transform or format it for human-friendly
-  # reading when formtastic is user without object. Defaults to :humanize.
-  Formtastic::SemanticFormBuilder.label_str_method = :titleize
-
-  # Set the array of methods to try calling on parent objects in :select and :radio inputs
-  # for the text inside each @<option>@ tag or alongside each radio @<input>@.  The first method
-  # that is found on the object will be used.
-  # Defaults to ["to_label", "display_name", "full_name", "name", "title", "username", "login", "value", "to_s"]
-  Formtastic::SemanticFormBuilder.collection_label_methods = ["title_and_author", "display_name", "login", "to_s"]
-
-  # Formtastic by default renders inside li tags the input, hints and then
-  # errors messages. Sometimes you want the hints to be rendered first than
-  # the input, in the following order: hints, input and errors. You can
-  # customize it doing just as below:
-  Formtastic::SemanticFormBuilder.inline_order = [:hints, :input, :errors]
-  
-  # Set the default "priority countries" to suit your user base when using :as => :country
-  Formtastic::SemanticFormBuilder.priority_countries = ["Australia", "New Zealand"]
-  
-  # Specifies if labels/hints for input fields automatically be looked up using I18n.
-  # Default value: false. Overridden for specific fields by setting value to true,
-  # i.e. :label => true, or :hint => true (or opposite depending on initialized value)
-  # Formtastic::SemanticFormBuilder.i18n_lookups_by_default = false
-  
-  # If you want to subclass SemanticFormBuilder to add/change the behavior to suit your needs, you
-  # can specify the builder class.
-  # Formtastic::SemanticFormHelper.builder = MyCustomBuilder
-</pre>
 
 h2. Status
 
-*THINGS ARE GOING TO CHANGE A BIT BEFORE WE HIT 1.0.*
-
-It's a work in progress and a bit rough around the edges still, but I hope you try it and offer some suggestions and improvements anyway.
-
-On the plus side, it has a comprehensive spec suite and contributions from at least ten independent developers.
-
-"Wishlist":http://wiki.github.com/justinfrench/formtastic/wishlist on the wiki is serving as pretty good documentation for the roadmap to 1.0 and beyond right now, but I'll work on getting a real tracking system or something happening soon.
+Formtastic has been in active development for about a year.  We've just recently jumped to an 0.9 version number, signalling that we consider this a 1.0 release candidate, and that the API won't change significantly for the 1.x series.
 
 
 h2. Dependencies
@@ -482,29 +427,12 @@ h2. Compatibility
 I'm only testing Formtastic with the latest Rails 2.2.x stable release, and it should be fine under Rails 2.3 as well (including nested forms).  Patches are welcome to allow backwards compatibility, but I don't have the energy!
 
 
-
-h2. What about Stylesheets?
-
-A proof-of-concept (very much a work-in-progress) stylesheet is provided which you can include in your layout.  Customization is best achieved by overriding these styles in an additional stylesheet so that the Formtastic styles can be updated without clobbering your changes.
-
-1. Use the generator to copy the formtastic.css and formtastic_changes.css into your public directory
-
-<pre>
-./script/generate formtastic_stylesheets
-</pre>
-
-2. Add both formtastic.css and formtastic_changes.css to your layout:
-
-<pre>
-<%= stylesheet_link_tag "formtastic" %>
-<%= stylesheet_link_tag "formtastic_changes" %>
-</pre>
-
 h2. Got TextMate?
 
 Well...there's a TextMate-bundle in town, dedicated to make usage of Formtastic in the TextMate editor even more of a breeze:
 
 "Formtastic.tmbundle":http://github.com/grimen/formtastic_tmbundle
+
 
 h2. Contributors
 
