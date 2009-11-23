@@ -319,7 +319,6 @@ module Formtastic #:nodoc:
         key = :submit
         object_name = @object_name.to_s.send(@@label_str_method)
       end
-      fallback_text ||= "#{key.to_s.humanize} {{model}}"
 
       text = (self.localized_string(key, text, :action, :model => object_name) ||
               ::Formtastic::I18n.t(key, :model => object_name)) unless text.is_a?(::String)
@@ -421,11 +420,7 @@ module Formtastic #:nodoc:
     # Collects content columns (non-relation columns) for the current form object class.
     #
     def content_columns
-      if @object.present?
-        @object.class.name.constantize.content_columns.collect { |c| c.name.to_sym }.compact
-      else
-        @object_name.to_s.classify.constantize.content_columns.collect { |c| c.name.to_sym }.compact rescue []
-      end
+      self.model_name.constantize.content_columns.collect { |c| c.name.to_sym }.compact rescue []
     end
 
     # Collects association columns (relation columns) for the current form object class.
@@ -1385,7 +1380,7 @@ module Formtastic #:nodoc:
         use_i18n = value.nil? ? @@i18n_lookups_by_default : (value != false)
 
         if use_i18n
-          model_name  = (@object ? @object.class.name : @object_name.to_s).underscore
+          model_name  = self.model_name.underscore
           action_name = template.params[:action].to_s rescue ''
           attribute_name = key.to_s
 
@@ -1400,10 +1395,14 @@ module Formtastic #:nodoc:
           defaults << ''
 
           i18n_value = ::Formtastic::I18n.t(defaults.shift,
-            options.merge(:default => defaults,:scope => type.to_s.pluralize.to_sym))
+            options.merge(:default => defaults, :scope => type.to_s.pluralize.to_sym))
           i18n_value.blank? ? nil : i18n_value
         end
       end
+    end
+
+    def model_name
+      @object.present? ? @object.class.name : @object_name.to_s.classify
     end
 
     def send_or_call(duck, object)
