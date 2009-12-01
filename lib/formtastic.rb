@@ -946,7 +946,6 @@ module Formtastic #:nodoc:
           else
             opts = strip_formtastic_options(options).merge(:prefix => @object_name, :field_name => field_name, :default => datetime)
             item_label_text = ::I18n.t(input.to_s, :default => input.to_s.humanize, :scope => [:datetime, :prompts])
-<<<<<<< HEAD
 
             list_items_capture << template.content_tag(:li,
               template.content_tag(:label, item_label_text, :for => input_id) <<
@@ -1041,102 +1040,6 @@ module Formtastic #:nodoc:
         html_options    = { :name => "#{@object_name}[#{input_name}][]" }.merge(html_options)
         input_ids       = []
 
-=======
-
-            list_items_capture << template.content_tag(:li,
-              template.content_tag(:label, item_label_text, :for => input_id) <<
-              template.send(:"select_#{input}", datetime, opts, html_options.merge(:id => input_id))
-            )
-          end
-        end
-
-        hidden_fields_capture << field_set_and_list_wrapping_for_method(method, options.merge(:label_for => input_ids.first), list_items_capture)
-      end
-
-      # Outputs a fieldset containing a legend for the label text, and an ordered list (ol) of list
-      # items, one for each possible choice in the belongs_to association.  Each li contains a
-      # label and a check_box input.
-      #
-      # This is an alternative for has many and has and belongs to many associations.
-      #
-      # Example:
-      #
-      #   f.input :author, :as => :check_boxes
-      #
-      # Output:
-      #
-      #   <fieldset>
-      #     <legend class="label"><label>Authors</label></legend>
-      #     <ol>
-      #       <li>
-      #         <input type="hidden" name="book[author_id][1]" value="">
-      #         <label for="book_author_id_1"><input id="book_author_id_1" name="book[author_id][1]" type="checkbox" value="1" /> Justin French</label>
-      #       </li>
-      #       <li>
-      #         <input type="hidden" name="book[author_id][2]" value="">
-      #         <label for="book_author_id_2"><input id="book_author_id_2" name="book[owner_id][2]" type="checkbox" value="2" /> Kate French</label>
-      #       </li>
-      #     </ol>
-      #   </fieldset>
-      #
-      # Notice that the value of the checkbox is the same as the id and the hidden
-      # field has empty value. You can override the hidden field value using the
-      # unchecked_value option.
-      #
-      # You can customize the options available in the set by passing in a collection (Array) of
-      # ActiveRecord objects through the :collection option.  If not provided, the choices are found
-      # by inferring the parent's class name from the method name and simply calling find(:all) on
-      # it (Author.find(:all) in the example above).
-      #
-      # Examples:
-      #
-      #   f.input :author, :as => :check_boxes, :collection => @authors
-      #   f.input :author, :as => :check_boxes, :collection => Author.find(:all)
-      #   f.input :author, :as => :check_boxes, :collection => [@justin, @kate]
-      #
-      # The :label_method option allows you to customize the label for each checkbox two ways:
-      #
-      # * by naming the correct method to call on each object in the collection as a symbol (:name, :login, etc)
-      # * by passing a Proc that will be called on each object in the collection, allowing you to use helpers or multiple model attributes together
-      #
-      # Examples:
-      #
-      #   f.input :author, :as => :check_boxes, :label_method => :full_name
-      #   f.input :author, :as => :check_boxes, :label_method => :login
-      #   f.input :author, :as => :check_boxes, :label_method => :full_name_with_post_count
-      #   f.input :author, :as => :check_boxes, :label_method => Proc.new { |a| "#{a.name} (#{pluralize("post", a.posts.count)})" }
-      #
-      # The :value_method option provides the same customization of the value attribute of each checkbox input tag.
-      #
-      # Examples:
-      #
-      #   f.input :author, :as => :check_boxes, :value_method => :full_name
-      #   f.input :author, :as => :check_boxes, :value_method => :login
-      #   f.input :author, :as => :check_boxes, :value_method => Proc.new { |a| "author_#{a.login}" }
-      #
-      # You can pre-select/check a specific checkbox value by passing in the :selected option (alias :checked works as well).
-      # 
-      # Examples:
-      #  
-      #   f.input :authors, :as => :check_boxes, :selected => @justin
-      #   f.input :authors, :as => :check_boxes, :selected => Author.most_popular.collect(&:id)
-      #   f.input :authors, :as => :check_boxes, :selected => nil   # override any defaults: select none
-      #
-      # Finally, you can set :value_as_class => true if you want the li wrapper around each checkbox / label 
-      # combination to contain a class with the value of the radio button (useful for applying specific 
-      # CSS or Javascript to a particular checkbox).
-      #
-      def check_boxes_input(method, options)
-        collection = find_collection_for_column(method, options)
-        html_options = options.delete(:input_html) || {}
-
-        input_name      = generate_association_input_name(method)
-        value_as_class  = options.delete(:value_as_class)
-        unchecked_value = options.delete(:unchecked_value) || ''
-        html_options    = { :name => "#{@object_name}[#{input_name}][]" }.merge(html_options)
-        input_ids       = []
-
->>>>>>> e1993e2669d13e4e080b63495469d6098be891c0
         selected_option_is_present = [:selected, :checked].any? { |k| options.key?(k) }
         selected_values = (options.key?(:checked) ? options[:checked] : options[:selected]) if selected_option_is_present
         selected_values  = [*selected_values].compact
@@ -1155,11 +1058,7 @@ module Formtastic #:nodoc:
             :for => input_id
           )
 
-<<<<<<< HEAD
           li_options = value_as_class ? { :class => [method.to_s.singularize, value.to_s.downcase].join('_') } : {}
-=======
-          li_options = value_as_class ? { :class => value.to_s.downcase } : {}
->>>>>>> e1993e2669d13e4e080b63495469d6098be891c0
           template.content_tag(:li, li_content, li_options)
         end
 
@@ -1182,7 +1081,7 @@ module Formtastic #:nodoc:
       #
       def country_input(method, options)
         raise "To use the :country input, please install a country_select plugin, like this one: http://github.com/rails/iso-3166-country-select" unless self.respond_to?(:country_select)
-      
+
         html_options = options.delete(:input_html) || {}
         priority_countries = options.delete(:priority_countries) || @@priority_countries
 
